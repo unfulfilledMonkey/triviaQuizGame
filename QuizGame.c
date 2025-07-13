@@ -406,9 +406,9 @@ void editQuestion(struct triviaQuestionData records[], int *recordCount){
 
 //function that prints adminmain menu
 void showAdminMenu(){
-    printf("==============================================================================\n");
-    printf("                                   ADMIN MENU\n");
-    printf("==============================================================================\n");
+    printf("==================================================\n");
+    printf("                      ADMIN MENU\n");
+    printf("==================================================\n");
     printf("1. Add Question\n");
     printf("2. Edit Question\n");
     printf("3. Delete Question\n");
