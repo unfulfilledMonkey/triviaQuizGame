@@ -36,6 +36,7 @@ void showAdminMenu();
 //admin actions
 int checkPassword();
 void addQuestion(struct triviaQuestionData records[], int *recordCount);
+void editQuestion(struct triviaQuestionData records[], int *recordCount);
 
 /**********************************************************Functions***********************************************************/
 //function to automatically clear the screen
@@ -222,6 +223,187 @@ void addQuestion(struct triviaQuestionData record[], int *recordCount){
     }
 }
 
+//function to edit existing question
+void editQuestion(struct triviaQuestionData records[], int *recordCount){
+    char uniqueTopics[100][20];
+    char buffer[150];
+    int topicCount = 0;
+    int topicChoice = 0;
+    int displayedIndices[100];
+    int displayedCount = 0;
+    int questionNumber = 0;
+    int recordIndex = -1;
+    int field = 0;
+    int isUnique = 0;
+
+    clearScreen();
+    if(*recordCount == 0){
+        printf("Sorry, no records available to edit\n");
+        printf("Returning to menu...");
+        Sleep(1500);
+        return;
+    }
+
+    printf("Available Topics: \n");
+    //checks if topic is Unique
+    for(int i = 0; i < *recordCount; i++){
+        isUnique = 1;
+        for(int j = 0; j < topicCount; j++){
+            if(strcmp(records[i].topic, uniqueTopics[j]) == 0){
+                isUnique = 0;
+                break;
+            }
+        }
+        //only shows unique topics
+        if(isUnique == 1){
+            strcpy(uniqueTopics[topicCount++], records[i].topic);
+            printf("[%d] %s\n", topicCount, records[i].topic);
+        }
+    }
+
+    printf("Type '0' to go back to menu\n");
+    printf("Note: Select an option by typing its corresponding number.\n");
+    printf("What topic would you like to choose: ");
+    scanf("%d", &topicChoice);
+    getchar();
+
+    if(topicChoice == 0){
+        printf("gotcha...returning to menu...");
+        Sleep(1000);
+        return;
+    }
+
+    if(topicChoice < 1 || topicChoice > topicCount){
+        printf("Did you misclick? try again...\n");
+        Sleep(1000);
+        return;
+    }
+
+    char *selectedTopic = uniqueTopics[topicChoice - 1];//to match user input
+    printf("Questions under topic: %s\n\n", selectedTopic);
+
+    for (int i = 0; i < *recordCount; i++) {
+        if (strcmp(records[i].topic, selectedTopic) == 0) {
+            printf("QuestionNum: %d\nQuestion: %s\n1) %s\n2) %s\n3) %s\nAnswer: %s\n\n",
+                records[i].questionNum,
+                records[i].question,
+                records[i].firstChoice,
+                records[i].secondChoice,
+                records[i].thirdChoice,
+                records[i].answer
+            );
+            displayedIndices[displayedCount++] = i;
+        }
+    }
+
+    printf("Note: Select an option by typing its corresponding number.\n");
+    printf("Which question do you want to edit?: ");
+    scanf("%d", &questionNumber);
+    getchar();
+    printf("Please wait a moment...");
+    Sleep(1000);
+    clearScreen();
+
+    for (int i = 0; i < displayedCount; i++) {
+        if (records[displayedIndices[i]].questionNum == questionNumber) {
+            recordIndex = displayedIndices[i];
+            break;
+        }
+    }
+
+    if (recordIndex == -1) {
+        printf("Woops, question number not found under selected topic, try again...\n");
+        Sleep(1000);
+        return;
+    }
+
+    struct triviaQuestionData *r = &records[recordIndex];
+
+    printf("\nCurrent Record:\nTopic: %s\nQuestionNum: %d\nQuestion: %s\n1) %s\n2) %s\n3) %s\nAnswer: %s\n",
+           r->topic, r->questionNum, r->question, r->firstChoice, r->secondChoice, r->thirdChoice, r->answer);
+
+    // Ask which field to edit
+    printf("\nWhich field do you want to edit?\n");
+    printf("[1] Topic\n[2] Question\n[3] Choice 1\n[4] Choice 2\n[5] Choice 3\n[6] Answer\n[0] Cancel\nChoose: ");
+    scanf("%d", &field);
+    getchar();
+
+    switch (field) {
+        case 1:
+            printf("Enter new topic: ");
+            fgets(buffer, sizeof(buffer), stdin);
+            buffer[strcspn(buffer, "\n")] = 0;
+            strcpy(r->topic, buffer);
+            break;
+        case 2:
+            printf("Enter new question: ");
+            fgets(buffer, sizeof(buffer), stdin);
+            buffer[strcspn(buffer, "\n")] = 0;
+            strcpy(r->question, buffer);
+            break;
+        case 3:
+            printf("Enter new choice 1: ");
+            fgets(buffer, sizeof(buffer), stdin);
+            buffer[strcspn(buffer, "\n")] = 0;
+            strcpy(r->firstChoice, buffer);
+            break;
+        case 4:
+            printf("Enter new choice 2: ");
+            fgets(buffer, sizeof(buffer), stdin);
+            buffer[strcspn(buffer, "\n")] = 0;
+            strcpy(r->secondChoice, buffer);
+            break;
+        case 5:
+            printf("Enter new choice 3: ");
+            fgets(buffer, sizeof(buffer), stdin);
+            buffer[strcspn(buffer, "\n")] = 0;
+            strcpy(r->thirdChoice, buffer);
+            break;
+        case 6:
+            printf("Enter new answer: ");
+            fgets(buffer, sizeof(buffer), stdin);
+            buffer[strcspn(buffer, "\n")] = 0;
+            strcpy(r->answer, buffer);
+            break;
+        case 0:
+            printf("Edit cancelled.\n");
+            printf("Returning...");
+            Sleep(1000);
+            return;
+        default:
+            printf("Invalid field.\n");
+            Sleep(1000);
+            return;
+    }
+
+    // Save to file
+    FILE *fp = fopen("questions.txt", "w");
+    if (!fp) {
+        printf("Failed to save changes.\n");
+        return;
+    }
+
+    for (int i = 0; i < *recordCount; i++) {
+        fprintf(fp, "%s|%d|%s|%s|%s|%s|%s\n",
+            records[i].topic,
+            records[i].questionNum,
+            records[i].question,
+            records[i].firstChoice,
+            records[i].secondChoice,
+            records[i].thirdChoice,
+            records[i].answer
+        );
+    }
+    fclose(fp);
+    printf("YeHEY! Record updated successfully!\n");
+
+    // Option to repeat
+    printf("Press any key to return to topic selection...\n");
+    getch();
+    editQuestion(records, recordCount);
+
+}
+
 //function that prints adminmain menu
 void showAdminMenu(){
     printf("==============================================================================\n");
@@ -261,6 +443,7 @@ void adminMenu(){
                 case 2:
                     printf("Setting up workspace to edit questions...");
                     Sleep(1000);
+                    editQuestion(records, &recordCount);
                     break;
                 case 3:
                     printf("Setting up workspace to delete questions...");
